@@ -20,3 +20,4 @@ isort
 loguru
 tqdm
 seaborn
+prophet
