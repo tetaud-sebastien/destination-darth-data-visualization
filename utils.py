@@ -1,11 +1,13 @@
-import xarray as xr
-import pandas as pd
-import numpy as np
-from prophet import Prophet
+import os
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import xarray as xr
+from prophet import Prophet
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
-
-
+import os 
 # Define the coordinates dictionary
 capitals_coordinates = {
     "Tirana": (41.3275, 19.8189),
@@ -91,7 +93,7 @@ def preprocess(dataset, lat=48.8566, lon=2.3522, city="Paris", method="nearest",
     return df
 
     
-def basic_plot(df, city, coord):
+def basic_plot(df, city, coord, verbose=False):
         """
         Plots temperature over time from a given dataframe.
 
@@ -110,7 +112,8 @@ def basic_plot(df, city, coord):
         plt.ylabel('Temperature [°C]', fontsize=14)
         plt.xticks(rotation=45)
         plt.legend()
-        plt.show()
+        if verbose:
+            plt.show()
 
         
 def train_model(df, date_col='time', temp_col='temperature'):
@@ -165,7 +168,7 @@ def make_predictions(model, test_df):
     return forecast, mae, rmse
 
 
-def plot_forecast(train_df, test_df, forecast, city, coord):
+def plot_forecast(train_df, test_df, forecast, city, coord, verbose=False):
     """
     Plots the training data, test data, and forecast.
 
@@ -185,4 +188,38 @@ def plot_forecast(train_df, test_df, forecast, city, coord):
     plt.title(f'Daily average temperature forecast in {city} - coordinate: {coord}')
     plt.legend()
     plt.xticks(rotation=45)
-    plt.show()
+    if verbose:
+        plt.show()
+        
+def plot_benchmark(benchmark_dict: dict, out_dir: str):
+    
+    df = pd.DataFrame(benchmark_dict)
+    df = df.T 
+    df["capital"] = df.index
+    
+    plt.figure(figsize=(16,8))
+    sns.barplot(df, x="end_to_end", y="capital", orient="y")
+    plt.title("End to End DT climate advanced benchmark")
+    plt.ylabel("time [s]")
+    plt.xlabel("Capital")
+    plt.legend()
+    filename = os.path.join(out_dir,"Benchmark_barplot_v1.svg")
+    plt.savefig(filename)
+    
+    df.drop(columns='end_to_end').plot(kind='bar', stacked=True, figsize=(10, 6))
+    plt.ylabel('Time (seconds)')
+    plt.title('End to End DT climate advanced benchmark')
+    plt.legend(loc='upper right')
+    filename = os.path.join(out_dir,"Benchmark_barplot_v2.svg")
+    plt.savefig(filename)
+    
+    df.plot(kind='barh', figsize=(10, 6))
+    plt.xlabel('Time (seconds)')
+    plt.title('End to End DT climate advanced benchmark')
+    plt.xscale("log")
+    filename = os.path.join(out_dir,"Benchmark_barplot_v3.svg")
+    plt.savefig(filename)
+    
+    
+    
+    
