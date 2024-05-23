@@ -196,6 +196,7 @@ def plot_benchmark(benchmark_dict: dict, out_dir: str):
     df = pd.DataFrame(benchmark_dict)
     df = df.T 
     df["capital"] = df.index
+    df = df.reset_index(drop=True)
     
     plt.figure(figsize=(16,8))
     sns.barplot(df, x="end_to_end", y="capital", orient="y")
@@ -216,7 +217,6 @@ def plot_benchmark(benchmark_dict: dict, out_dir: str):
     df.plot(kind='barh', figsize=(10, 6))
     plt.xlabel('Time (seconds)')
     plt.title('End to End DT climate advanced benchmark')
-    plt.xscale("log")
     filename = os.path.join(out_dir,"Benchmark_barplot_v3.svg")
     plt.savefig(filename)
     
