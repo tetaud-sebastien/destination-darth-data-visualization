@@ -40,6 +40,16 @@ capitals_coordinates = {
     "Stockholm": (59.3293, 18.0686)
 }
 
+def display_coordinates(city):
+    
+    global selected_coordinates
+    global selected_city
+    coords = capitals_coordinates[city]
+    selected_coordinates = coords
+    selected_city = city
+    # print(f"Coordinates of {city}: Latitude = {coords[0]}, Longitude = {coords[1]}")
+    return selected_coordinates, city
+
 def get_cacheB_dataset(url_dataset):
            
         data = xr.open_dataset(
