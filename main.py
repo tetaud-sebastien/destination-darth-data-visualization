@@ -36,10 +36,10 @@ capitals_coordinates = {
 }
 
 
-
 if __name__ == "__main__":
     
     benchmark_results = {}
+    capitals_coordinates = dict(sorted(capitals_coordinates.items()))
     URL_DATASET = "https://cacheb.dcms.e2e.desp.space/destine-climate-dt/SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr"
     logger.info("start benchmark")
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
             t0 = time.time()
             dataset = get_cacheB_dataset(url_dataset=URL_DATASET)
             t1 = time.time()
-            df = preprocess(dataset, lat=coord[0], lon=coord[1], method="nearest", resample_period="7D")
+            df = preprocess(dataset, lat=coord[0], lon=coord[1], method="nearest", resample_period="D")
             t2 = time.time()    
             model, train_df, test_df = train_model(df, date_col='time', temp_col='temperature')
             t3 = time.time()
@@ -71,7 +71,8 @@ if __name__ == "__main__":
                 forecast=df_forecast,
                 city=cap, 
                 coord=coord,
-                verbose = False)
+                verbose = False,
+                save=True)
             t5 = time.time()
 
             benchmark_result["access_time"].append(t1-t0)

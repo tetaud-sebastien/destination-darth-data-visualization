@@ -9,35 +9,35 @@ from prophet import Prophet
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 import os 
 # Define the coordinates dictionary
-capitals_coordinates = {
-    "Vienna": (48.2082, 16.3738),
-    "Brussels": (50.8503, 4.3517),
-    "Sofia": (42.6977, 23.3219),
-    "Zagreb": (45.8150, 15.9819),
-    "Nicosia": (35.1856, 33.3823),
-    "Prague": (50.0755, 14.4378),
-    "Copenhagen": (55.6761, 12.5683),
-    "Tallinn": (59.4370, 24.7535),
-    "Helsinki": (60.1695, 24.9355),
-    "Paris": (48.8566, 2.3522),
-    "Berlin": (52.5200, 13.4050),
-    "Athens": (37.9838, 23.7275),
-    "Budapest": (47.4979, 19.0402),
-    "Dublin": (53.3498, -6.2603),
-    "Rome": (41.9028, 12.4964),
-    "Riga": (56.9496, 24.1052),
-    "Vilnius": (54.6872, 25.2797),
-    "Luxembourg": (49.6117, 6.1319),
-    "Valletta": (35.8970, 14.5126),
-    "Amsterdam": (52.3676, 4.9041),
-    "Warsaw": (52.2297, 21.0122),
-    "Lisbon": (38.7223, -9.1393),
-    "Bucharest": (44.4268, 26.1025),
-    "Bratislava": (48.1486, 17.1077),
-    "Ljubljana": (46.0569, 14.5058),
-    "Madrid": (40.4168, -3.7038),
-    "Stockholm": (59.3293, 18.0686)
-}
+# capitals_coordinates = {
+#     "Vienna": (48.2082, 16.3738),
+#     "Brussels": (50.8503, 4.3517),
+# #     # "Sofia": (42.6977, 23.3219),
+# #     # "Zagreb": (45.8150, 15.9819),
+# #     # "Nicosia": (35.1856, 33.3823),
+# #     # "Prague": (50.0755, 14.4378),
+# #     # "Copenhagen": (55.6761, 12.5683),
+# #     # "Tallinn": (59.4370, 24.7535),
+# #     # "Helsinki": (60.1695, 24.9355),
+# #     # "Paris": (48.8566, 2.3522),
+# #     # "Berlin": (52.5200, 13.4050),
+# #     # "Athens": (37.9838, 23.7275),
+# #     # "Budapest": (47.4979, 19.0402),
+# #     # "Dublin": (53.3498, -6.2603),
+# #     # "Rome": (41.9028, 12.4964),
+# #     # "Riga": (56.9496, 24.1052),
+# #     # "Vilnius": (54.6872, 25.2797),
+# #     # "Luxembourg": (49.6117, 6.1319),
+# #     # "Valletta": (35.8970, 14.5126),
+# #     # "Amsterdam": (52.3676, 4.9041),
+# #     # "Warsaw": (52.2297, 21.0122),
+# #     # "Lisbon": (38.7223, -9.1393),
+# #     # "Bucharest": (44.4268, 26.1025),
+# #     # "Bratislava": (48.1486, 17.1077),
+# #     # "Ljubljana": (46.0569, 14.5058),
+# #     # "Madrid": (40.4168, -3.7038),
+# #     # "Stockholm": (59.3293, 18.0686)
+# # }
 
 def get_cacheB_dataset(url_dataset):
            
@@ -143,7 +143,7 @@ def make_predictions(model, test_df):
     return forecast, mae, rmse
 
 
-def plot_forecast(train_df, test_df, forecast, city, coord, verbose=False):
+def plot_forecast(train_df, test_df, forecast, city, coord, verbose=False, save=False):
     """
     Plots the training data, test data, and forecast.
 
@@ -161,39 +161,41 @@ def plot_forecast(train_df, test_df, forecast, city, coord, verbose=False):
     plt.xlabel('Date')
     plt.ylabel('Temperature [°C]')
     plt.title(f'Daily average temperature forecast in {city} - coordinate: {coord}')
-    plt.legend()
+    plt.legend(loc='lower right')
     plt.xticks(rotation=45)
     if verbose:
         plt.show()
+    if save:
+        
+        filaname = os.path.join("results",f"{city}.svg")
+        plt.savefig(filaname)
+    plt.close()
+
         
 def plot_benchmark(benchmark_dict: dict, out_dir: str):
     
     df = pd.DataFrame(benchmark_dict)
     df = df.T 
-    df["capital"] = df.index
-    
-    plt.figure(figsize=(16,8))
-    sns.barplot(df, x="end_to_end", y="capital", orient="y")
-    plt.title("End to End DT climate advanced benchmark")
-    plt.ylabel("time [s]")
-    plt.xlabel("Capital")
-    plt.legend(loc='upper right')
-    filename = os.path.join(out_dir,"Benchmark_standard_barplot_v1.svg")
-    plt.savefig(filename)
-    
-    df.drop(columns='end_to_end').plot(kind='bar', stacked=True, figsize=(10, 6))
+    df["City"] = df.index
+    # Extract error bars
+    errors = df['end_to_end_std']
+    # Plotting the stacked bar chart without 'end_to_end'
+    df_plot = df.drop(columns=['end_to_end', 'end_to_end_std', 'City'])
+    df_plot.plot(kind='bar', stacked=True, figsize=(16, 8))
+    # Overlay 'end_to_end' with error bars
+    x = np.arange(len(df))
+    plt.errorbar(x, df['end_to_end'], yerr=errors, fmt='o', color='black', capsize=5)
+    # Set labels and title
     plt.ylabel('Time (seconds)')
     plt.title('End to End DT climate advanced benchmark')
+    plt.xlabel("City")
+    # Adding city names as x-tick labels
+    plt.xticks(x, df['City'])
+    # Display legend
     plt.legend(loc='upper right')
-    filename = os.path.join(out_dir,"Benchmark_standard_barplot_v2.svg")
-    plt.savefig(filename)
-    
-    df.plot(kind='barh', figsize=(10, 6))
-    plt.xlabel('Time (seconds)')
-    plt.title('End to End DT climate advanced benchmark')
-    filename = os.path.join(out_dir,"Benchmark_standard_barplot_v3.svg")
-    plt.savefig(filename)
-    
+    # Save the figure
+    plt.savefig("results/Benchmark_standard_barplot_v2.svg")
+        
     
     
     
