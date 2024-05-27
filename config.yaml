@@ -29,4 +29,4 @@ capital_coordinates: {
     "Madrid": [40.4168, -3.7038],
     "Stockholm": [59.3293, 18.0686]
 }
-output_folder: "result"
+output_folder: "results"
