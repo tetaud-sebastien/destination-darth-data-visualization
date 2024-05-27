@@ -1,107 +1,114 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+"""This module's docstring summary line.
+This Python utils file contains functions for data loading, preprocessing,
+visualization, modeling, and benchmarking for DestinE climate-dt.
+"""
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import xarray as xr
+import yaml
 from prophet import Prophet
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
-import os 
 
 
-capitals_coordinates = {
-    "Vienna": (48.2082, 16.3738),
-    "Brussels": (50.8503, 4.3517),
-    "Sofia": (42.6977, 23.3219),
-    "Zagreb": (45.8150, 15.9819),
-    "Nicosia": (35.1856, 33.3823),
-    "Prague": (50.0755, 14.4378),
-    "Copenhagen": (55.6761, 12.5683),
-    "Tallinn": (59.4370, 24.7535),
-    "Helsinki": (60.1695, 24.9355),
-    "Paris": (48.8566, 2.3522),
-    "Berlin": (52.5200, 13.4050),
-    "Athens": (37.9838, 23.7275),
-    "Budapest": (47.4979, 19.0402),
-    "Dublin": (53.3498, -6.2603),
-    "Rome": (41.9028, 12.4964),
-    "Riga": (56.9496, 24.1052),
-    "Vilnius": (54.6872, 25.2797),
-    "Luxembourg": (49.6117, 6.1319),
-    "Valletta": (35.8970, 14.5126),
-    "Amsterdam": (52.3676, 4.9041),
-    "Warsaw": (52.2297, 21.0122),
-    "Lisbon": (38.7223, -9.1393),
-    "Bucharest": (44.4268, 26.1025),
-    "Bratislava": (48.1486, 17.1077),
-    "Ljubljana": (46.0569, 14.5058),
-    "Madrid": (40.4168, -3.7038),
-    "Stockholm": (59.3293, 18.0686)
-}
+def load_capitals_coordinates(file_path: str) -> dict:
+    """
+    Load capital coordinates from a YAML file.
 
-def display_coordinates(city):
-    
-    global selected_coordinates
-    global selected_city
-    coords = capitals_coordinates[city]
-    selected_coordinates = coords
-    selected_city = city
-    # print(f"Coordinates of {city}: Latitude = {coords[0]}, Longitude = {coords[1]}")
-    return selected_coordinates, city
+    Args:
+        file_path (str): Path to the YAML file.
 
-def get_cacheB_dataset(url_dataset):
-           
-        data = xr.open_dataset(
+    Returns:
+        dict: Dictionary containing capital names and their coordinates.
+    """
+    with open(file_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config["capital_coordinates"]
+
+
+def get_cacheB_dataset(url_dataset: str) -> xr.Dataset:
+    """
+    Download and load a dataset from a given URL.
+
+    Args:
+        url_dataset (str): URL of the dataset to be downloaded.
+
+    Returns:
+        xr.Dataset: The downloaded dataset.
+    """
+    data = xr.open_dataset(
         url_dataset,
         engine="zarr",
         storage_options={"client_kwargs": {"trust_env": "true"}},
-        chunks={})
-        
-        return data
+        chunks={}
+    )
 
-    
-def preprocess(dataset, lat=48.8566, lon=2.3522, city="Paris", method="nearest", resample_period="D"):
-    
+    return data
+
+
+def preprocess(dataset: xr.Dataset, lat: float = 48.8566, lon: float = 2.3522,
+               method: str = "nearest",
+               resample_period: str = "D") -> pd.DataFrame:
     """
+    Preprocess the dataset to extract and resample temperature
+    data for a specific location.
+
+    Args:
+        dataset (xr.Dataset): The input dataset containing temperature data.
+        lat (float): Latitude of the location. Default is 48.8566 (Paris).
+        lon (float): Longitude of the location. Default is 2.3522 (Paris).
+        method (str): Method for selecting the nearest grid point. Default is "nearest".
+        resample_period (str): Resampling period. Default is "D" (daily).
+
+    Returns:
+        pd.DataFrame: DataFrame containing resampled temperature data with columns 'time' and 'temperature'.
     """
     dataset = dataset.t2m
     dataset = dataset.sel(latitude=lat, longitude=lon, method=method)
     dataset = dataset.resample(time=resample_period).mean(dim="time")
     dataset = dataset.load()
     index = dataset.time
-    
-    df = pd.DataFrame(data={"time":index,
+
+    df = pd.DataFrame(data={"time": index,
                             "temperature": dataset.values})
 
     df["temperature"] = df["temperature"] - 273
-    
+
     return df
 
-    
-def basic_plot(df, city, coord, verbose=False):
-        """
-        Plots temperature over time from a given dataframe.
 
-        Parameters:
+def basic_plot(df: pd.DataFrame, city: str, coord: str):
+    """
+    Plots the temperature over time from a given DataFrame.
+
+    Parameters:
         df (pd.DataFrame): DataFrame with 'time' and 'temperature' columns.
-        """
-       
-        # Ensure the 'time' column is in datetime format
-        df['time'] = pd.to_datetime(df['time'])
-        # Create the plot
-        plt.figure(figsize=(16, 8))
-        plt.plot(df['time'], df['temperature'], color='#9999ff', label=f"{city} mean temperature")
-        # Add title and labels
-        plt.title(f'Daily average temperature [°C] in {city} - coordinate:{coord}', fontsize=16)
-        plt.xlabel('Date', fontsize=14)
-        plt.ylabel('Temperature [°C]', fontsize=14)
-        plt.xticks(rotation=45)
-        plt.legend()
-        if verbose:
-            plt.show()
+        city (str): Name of the city.
+        coord (str): Coordinates of the city.
 
-        
+    Returns:
+        None
+    """
+    # Ensure the 'time' column is in datetime format
+    df['time'] = pd.to_datetime(df['time'])
+
+    # Create the plot
+    plt.figure(figsize=(16, 8))
+    plt.plot(df['time'], df['temperature'], color='#9999ff', label=f"{city} mean temperature")
+
+    # Add title and labels
+    plt.title(f'Daily average temperature [°C] in {city} - coordinate: {coord}', fontsize=16)
+    plt.xlabel('Date', fontsize=14)
+    plt.ylabel('Temperature [°C]', fontsize=14)
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.show()
+
+
 def train_model(df, date_col='time', temp_col='temperature'):
     """
     Prepares data and fits a Prophet model.
@@ -154,14 +161,24 @@ def make_predictions(model, test_df):
     return forecast, mae, rmse
 
 
-def plot_forecast(train_df, test_df, forecast, city, coord, verbose=False, save=False):
+def plot_forecast(train_df: pd.DataFrame, test_df: pd.DataFrame,
+                  forecast: pd.DataFrame, city: str,
+                  coord: str, verbose: bool = False,
+                  save: bool = False):
     """
     Plots the training data, test data, and forecast.
 
     Parameters:
-    train_df (pd.DataFrame): Training DataFrame.
-    test_df (pd.DataFrame): Testing DataFrame.
-    forecast (pd.DataFrame): Forecast DataFrame with predictions.
+        train_df (pd.DataFrame): Training DataFrame.
+        test_df (pd.DataFrame): Testing DataFrame.
+        forecast (pd.DataFrame): Forecast DataFrame with predictions.
+        city (str): Name of the city.
+        coord (str): Coordinates of the city.
+        verbose (bool): Whether to display the plot. Default is False.
+        save (bool): Whether to save the plot. Default is False.
+
+    Returns:
+        None
     """
     # Plot train and test data along with predictions
     plt.figure(figsize=(16, 8))
@@ -177,37 +194,50 @@ def plot_forecast(train_df, test_df, forecast, city, coord, verbose=False, save=
     if verbose:
         plt.show()
     if save:
-        
-        filaname = os.path.join("results",f"{city}.svg")
-        plt.savefig(filaname)
+        filename = os.path.join("results", f"{city}.svg")
+        plt.savefig(filename)
     plt.close()
 
-        
+
 def plot_benchmark(benchmark_dict: dict, out_dir: str):
-    
+    """
+    Plot benchmark results as a stacked bar chart with error bars.
+
+    Parameters:
+        benchmark_dict (dict): Dictionary containing benchmark results.
+        out_dir (str): Output directory to save the plot.
+
+    Returns:
+        None
+    """
+    # Convert benchmark dictionary to DataFrame
     df = pd.DataFrame(benchmark_dict)
-    df = df.T 
+    df = df.T
     df["City"] = df.index
+
     # Extract error bars
     errors = df['end_to_end_std']
+
     # Plotting the stacked bar chart without 'end_to_end'
     df_plot = df.drop(columns=['end_to_end', 'end_to_end_std', 'City'])
     df_plot.plot(kind='bar', stacked=True, figsize=(16, 8))
+
     # Overlay 'end_to_end' with error bars
     x = np.arange(len(df))
     plt.errorbar(x, df['end_to_end'], yerr=errors, fmt='o', color='black', capsize=5)
+
     # Set labels and title
     plt.ylabel('Time (seconds)')
     plt.title('End to End DT climate advanced benchmark')
     plt.xlabel("City")
+
     # Adding city names as x-tick labels
     plt.xticks(x, df['City'])
+
     # Display legend
     plt.legend(loc='upper right')
+
     # Save the figure
     filename = os.path.join(out_dir, "benchmark_barplot.svg")
     plt.savefig(filename)
-        
-    
-    
-    
+    plt.show()
