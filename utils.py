@@ -166,7 +166,8 @@ def make_predictions(model, test_df):
 def plot_forecast(train_df: pd.DataFrame, test_df: pd.DataFrame,
                   forecast: pd.DataFrame, city: str,
                   coord: str, verbose: bool = False,
-                  save: bool = False):
+                  save: bool = False,
+                  output_path: str = "results"):
     """
     Plots the training data, test data, and forecast.
 
@@ -196,7 +197,7 @@ def plot_forecast(train_df: pd.DataFrame, test_df: pd.DataFrame,
     if verbose:
         plt.show()
     if save:
-        filename = os.path.join("results", f"{city}.svg")
+        filename = os.path.join(output_path, f"{city}.svg")
         plt.savefig(filename)
     plt.close()
 

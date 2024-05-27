@@ -22,6 +22,11 @@ if __name__ == "__main__":
     output_folder = config["output_folder"]
     request_nb = config["request_nb"]
 
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    out_dir = os.path.join(dir_path, output_folder)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
     logger.info("start benchmark")
     # Iterate over each capital's coordinates for benchmarking
     for cap in capital_coordinates.keys():
@@ -51,13 +56,10 @@ if __name__ == "__main__":
             t3 = time.time()
             df_forecast, mae, rmse = make_predictions(model, test_df)
             t4 = time.time()
-            plot_forecast(train_df=train_df,
-                          test_df=test_df,
-                          forecast=df_forecast,
-                          city=cap,
-                          coord=coord,
-                          verbose=False,
-                          save=True)
+            plot_forecast(train_df=train_df,test_df=test_df,
+                          forecast=df_forecast, city=cap,
+                          coord=coord, verbose=False,
+                          save=True, output_path=out_dir)
             t5 = time.time()
             # Record benchmarking times
             benchmark["access_time"].append(t1-t0)
@@ -74,11 +76,6 @@ if __name__ == "__main__":
         # Calculate mean and standard deviation of times
         benchmarks[cap]["end_to_end_std"] = np.std(benchmark["end_to_end"])
         logger.warning(benchmarks)
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    out_dir = os.path.join(dir_path, output_folder)
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
 
     # Convert and write JSON object to file
     with open(os.path.join(out_dir, "benchmark.json"), "w") as outfile:

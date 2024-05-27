@@ -1,4 +1,4 @@
-request_nb: 2
+request_nb: 10
 cacheb_url: https://cacheb.dcms.e2e.desp.space/destine-climate-dt/SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr
 capital_coordinates: {
     "Vienna": [48.2082, 16.3738],
