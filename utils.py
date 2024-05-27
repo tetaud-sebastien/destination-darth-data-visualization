@@ -205,7 +205,8 @@ def plot_benchmark(benchmark_dict: dict, out_dir: str):
     # Display legend
     plt.legend(loc='upper right')
     # Save the figure
-    plt.savefig("results/Benchmark_standard_barplot_v2.svg")
+    filename = os.path.join(out_dir, "benchmark_barplot.svg")
+    plt.savefig(filename)
         
     
     
