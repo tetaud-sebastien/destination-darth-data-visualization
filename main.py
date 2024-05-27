@@ -10,10 +10,12 @@ from utils import (get_cacheB_dataset, make_predictions, plot_benchmark,
                    plot_forecast, preprocess, train_model)
 
 if __name__ == "__main__":
+    # Dictionary to store benchmarking results
     benchmarks = {}
     with open('config.yaml') as f:
         config = yaml.safe_load(f)
 
+    # Extract configuration details
     capital_coordinates = config["capital_coordinates"]
     capital_coordinates = dict(sorted(capital_coordinates.items()))
     url_dataset = config["cacheb_url"]
@@ -21,6 +23,7 @@ if __name__ == "__main__":
     request_nb = config["request_nb"]
 
     logger.info("start benchmark")
+    # Iterate over each capital's coordinates for benchmarking
     for cap in capital_coordinates.keys():
         benchmark = {
             "access_time": [],
@@ -30,6 +33,7 @@ if __name__ == "__main__":
             "end_to_end": []
             }
 
+        # Repeat benchmarking for a specified number of requests
         for _ in range(request_nb):
 
             coord = capital_coordinates[cap]
@@ -55,7 +59,7 @@ if __name__ == "__main__":
                           verbose=False,
                           save=True)
             t5 = time.time()
-
+            # Record benchmarking times
             benchmark["access_time"].append(t1-t0)
             benchmark["data_processing"].append(t2-t1)
             benchmark["train_model"].append(t4-t3)
@@ -67,6 +71,7 @@ if __name__ == "__main__":
         # Calculate mean times
         benchmarks[cap] = {key: np.mean(value) for key,
                            value in benchmark.items()}
+        # Calculate mean and standard deviation of times
         benchmarks[cap]["end_to_end_std"] = np.std(benchmark["end_to_end"])
         logger.warning(benchmarks)
 
