@@ -4,8 +4,10 @@
 This Python utils file contains functions for data loading, preprocessing,
 visualization, modeling, and benchmarking for DestinE climate-dt.
 """
+import base64
 import os
 
+import folium
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -241,3 +243,48 @@ def plot_benchmark(benchmark_dict: dict, out_dir: str):
     filename = os.path.join(out_dir, "benchmark_barplot.svg")
     plt.savefig(filename)
     plt.show()
+
+
+def create_map_with_forecast(capitals_coordinates: dict, forecast_folder: str,
+                             map_center: tuple = (48.8566, 2.3522),
+                             zoom: int = 6, output_file: str = 'map.html') -> folium.Map:
+    """
+    Creates a Folium map with markers for each capital, displaying forecast images in popups.
+
+    Args:
+        capitals_coordinates (dict): Dictionary containing capital names and their coordinates.
+        forecast_folder (str): Directory where the forecast images are stored.
+        map_center (tuple): Latitude and longitude of the map center. Default is (48.8566, 2.3522) (Paris).
+        zoom (int): Initial zoom level for the map. Default is 6.
+        output_file (str): File name to save the map as an HTML file. Default is 'map.html'.
+
+    Returns:
+        folium.Map: The generated Folium map object.
+    """
+    # Create a map centered at the specified location
+    m = folium.Map(location=map_center, zoom_start=zoom)
+
+    # Loop through the dictionary of capital coordinates
+    for key in capitals_coordinates.keys():
+        # Get the latitude and longitude of the current capital
+        lat = capitals_coordinates[key][0]
+        lon = capitals_coordinates[key][1]
+
+        # Path to the plot image
+        image_path = os.path.join(forecast_folder, f"{key}.svg")
+        with open(image_path, 'rb') as img_file:
+            img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+        # Create HTML for the popup with the plot image
+        popup_html = f'<img src="data:image/svg+xml;base64,{img_base64}" alt="DT-Climate Forecast {key}" width="1000" height="500">'
+        # Create a Popup with the HTML
+        popup = folium.Popup(popup_html, max_width=1000)
+
+        # Create a simple Folium icon
+        icon = folium.Icon(prefix="fa", icon='circle', color='darkblue')
+
+        # Add a marker with the popup and simple icon to the map
+        folium.Marker(location=[lat, lon], popup=popup, icon=icon).add_to(m)
+
+    # Save the map to an HTML file
+    m.save(output_file)
+    return m
