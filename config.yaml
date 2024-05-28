@@ -1,4 +1,5 @@
 request_nb: 10
+# CACHEB
 cacheb_url: https://cacheb.dcms.e2e.desp.space/destine-climate-dt/SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr
 capital_coordinates: {
     "Vienna": [48.2082, 16.3738],
@@ -29,4 +30,29 @@ capital_coordinates: {
     "Madrid": [40.4168, -3.7038],
     "Stockholm": [59.3293, 18.0686]
 }
-output_folder: "results"
+output_folder: "results/polytope"
+
+# POLYTOPE
+
+polytope_request:
+  activity: ScenarioMIP
+  class: d1
+  dataset: climate-dt
+  date: "20201201"
+  experiment: SSP3-7.0
+  expver: 0001
+  generation: 1
+  levtype: sfc
+  model: IFS-NEMO
+  param: 167
+  realization: 1
+  resolution: standard
+  stream: clte
+  time: '00/01/02/03/04/05/06/07/08/09/10/11/12/13/14/15/16/17/18/19/20/21/22/23'
+  type: fc
+
+polytope_url: polytope.lumi.apps.dte.destination-earth.eu
+grid:
+  lat: 0.3
+  lon: 0.3
+  method: linear
