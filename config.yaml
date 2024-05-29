@@ -1,4 +1,9 @@
-num_requests: 1
+num_requests: 5
+start_date: "20201201"
+end_date: "20210101"
+freq: "MS" # pandas attribite
+output_folder: "results/polytope"
+
 # CACHEB
 cacheb_url: https://cacheb.dcms.e2e.desp.space/destine-climate-dt/SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr
 capital_coordinates: {
@@ -29,11 +34,9 @@ capital_coordinates: {
     # "Ljubljana": [46.0569, 14.5058],
     # "Madrid": [40.4168, -3.7038],
     # "Stockholm": [59.3293, 18.0686]
-}
-output_folder: "results/polytope"
+    }
 
 # POLYTOPE
-
 polytope_request:
   activity: ScenarioMIP
   class: d1

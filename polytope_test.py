@@ -47,30 +47,32 @@ def polytope_preprocess(dataset, config: dict,lat: float = 48.8566, lon: float =
     return df
 
 
+def load_conf(path):
+
+    with open(path) as f:
+        config = yaml.safe_load(f)
+    return config
+
 if __name__ == "__main__":
+
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    config = load_conf(path=os.path.join(dir_path,"config.yaml"))
+
     # Dictionary to store benchmarking results
     benchmarks = {}
-    with open('config.yaml') as f:
-        config = yaml.safe_load(f)
-
     # Extract configuration details
     capital_coordinates = config["capital_coordinates"]
     capital_coordinates = dict(sorted(capital_coordinates.items()))
     output_folder = config["output_folder"]
     num_requests = config["num_requests"]
     # Generate list of dates for N days
-    N = 12  # Number of days
-    start_date = pd.to_datetime(config["polytope_request"]["date"])
-    end_date = pd.to_datetime("20211201")
-
-    # Create the date range from start date to end date
-    # date_range = [start_date + pd.Timedelta(days=i) for i in range(N)]
-
+    start_date = pd.to_datetime(str(config["start_date"]))
+    end_date = pd.to_datetime(str(config["end_date"]))
+    freq = config["freq"]
     # Create the date range with a monthly step
-    date_range = pd.date_range(start=start_date, end=end_date, freq='MS')
+    date_range = pd.date_range(start=start_date, end=end_date, freq=freq)
 
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
     out_dir = os.path.join(dir_path, output_folder)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -87,9 +89,7 @@ if __name__ == "__main__":
             "end_to_end": [None]* num_requests,
             "request_issues": [None]* num_requests,
             }
-
         request_issues = 0
-
         # Repeat benchmarking for a specified number of requests
         for r in tqdm(range(num_requests), desc="Processing requests", unit="request", ncols=100, colour="#3eedc4"):
 
@@ -102,11 +102,9 @@ if __name__ == "__main__":
                 for i in range(len(date_range)-1):
 
                     # Modify the polytope_request for the current date
-
                     start_date = date_range[i].strftime("%Y%m%d")
                     end_date = date_range[i+1].strftime("%Y%m%d")
                     date_conf = f"{start_date}/to/{end_date}"
-
                     # config["polytope_request"]["date"] = date.strftime("%Y%m%d")
                     config["polytope_request"]["date"] = date_conf
                     logger.warning(config["polytope_request"]["date"])
@@ -117,7 +115,7 @@ if __name__ == "__main__":
                     t1 = time.time()
                     datasets.append(data)
 
-            except ValueError as e:
+            except Exception as e:
                 logger.error(f"Issue in the data access or download: {e}")
                 request_issues += 1
                 continue  # Skip the current iteration and move to the next one
@@ -130,8 +128,11 @@ if __name__ == "__main__":
                                                     method="nearest",
                                                     resample_period="D")
                 df_list.append(df_tmp)
+            if len(df_list)>0:
+                df = pd.concat(df_list, axis=0)
+            else:
+                df = df_list[0]
 
-            df = pd.concat(df_list, axis=0)
             t2 = time.time()
             model, train_df, test_df = train_model(df=df,
                                                    date_col='time',
