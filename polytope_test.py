@@ -108,7 +108,6 @@ if __name__ == "__main__":
                     # config["polytope_request"]["date"] = date.strftime("%Y%m%d")
                     config["polytope_request"]["date"] = date_conf
                     logger.warning(config["polytope_request"]["date"])
-
                     # Query the data
                     t0 = time.time()
                     data = get_polytope_dataset(config=config)
@@ -154,11 +153,17 @@ if __name__ == "__main__":
             benchmark["end_to_end"][r]=(t5-t0)
             benchmark["request_issues"][r] = request_issues
 
-            # Calculate mean times
+
+            logger.error(benchmark)
+
+
+
+        # Calculate mean times
         benchmarks[cap] = {key: np.mean(value) for key,
                            value in benchmark.items()}
         # Calculate mean and standard deviation of times
         benchmarks[cap]["end_to_end_std"] = np.std(benchmark["end_to_end"])
+
         logger.warning(benchmarks)
 
     # Convert and write JSON object to file
