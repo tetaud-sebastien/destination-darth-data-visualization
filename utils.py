@@ -13,8 +13,10 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import yaml
+from loguru import logger
 from prophet import Prophet
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
+from tqdm import tqdm
 
 
 def load_capitals_coordinates(file_path: str) -> dict:
@@ -30,6 +32,21 @@ def load_capitals_coordinates(file_path: str) -> dict:
     with open(file_path, 'r') as file:
         config = yaml.safe_load(file)
     return config["capital_coordinates"]
+
+
+def load_config(file_path: str) -> dict:
+    """
+    Load YAML file.
+
+    Args:
+        file_path (str): Path to the YAML file.
+
+    Returns:
+        dict: Dictionary containing configuration information.
+    """
+    with open(file_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
 
 
 def get_cacheB_dataset(url_dataset: str) -> xr.Dataset:
@@ -289,3 +306,45 @@ def create_map_with_forecast(capitals_coordinates: dict, forecast_folder: str,
     # Save the map to an HTML file
     m.save(output_file)
     return m
+
+
+def cacheB_forecast_map(config: dict):
+
+
+    capital_coordinates = config["capital_coordinates"]
+    capital_coordinates = dict(sorted(capital_coordinates.items()))
+    url_dataset = config["cacheb_url"]
+    output_folder = config["output_folder"]
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    out_dir = os.path.join(dir_path, output_folder)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+
+    for (k, v) in tqdm(capital_coordinates.items(), desc="Processing requests", unit="request", ncols=100, colour="#3eedc4"):
+
+        cap, coord  = k, v
+
+        logger.info(f"cap: {cap}: coord: {coord}")
+
+        try:
+
+            dataset = get_cacheB_dataset(url_dataset=url_dataset)
+
+        except Exception as e:
+            logger.error(f"Issue in the data access or download: {e}")
+            continue
+
+
+        df = preprocess(dataset=dataset,
+                        lat=coord[0], lon=coord[1],
+                        method="nearest", resample_period="D")
+        model, train_df, test_df = train_model(df=df,
+                                                date_col='time',
+                                                temp_col='temperature')
+        df_forecast, mae, rmse = make_predictions(model, test_df)
+        plot_forecast(train_df=train_df,test_df=test_df,
+                        forecast=df_forecast, city=cap,
+                        coord=coord, verbose=False,
+                        save=True, output_path=out_dir)

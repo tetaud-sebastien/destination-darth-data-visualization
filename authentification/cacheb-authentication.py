@@ -114,7 +114,7 @@ with requests.Session() as s:
 
     print(
         f"""
-machine cacheb.dcms.e2e.desp.space
+machine cacheb.dcms.destine.eu
     login anonymous
     password {token}
 """
