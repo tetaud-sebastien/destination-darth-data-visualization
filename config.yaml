@@ -5,7 +5,7 @@ freq: "MS" # pandas attribite
 output_folder: "results/cacheb/"
 
 # CACHEB cacheb.dcms.destine.eu
-cacheb_url: https://cacheb.dcms.e2e.desp.space/destine-climate-dt/SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr
+cacheb_url: https://cacheb.dcms.destine.eu/destine-climate-dt/SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr
 capital_coordinates: {
     # "Vienna": [48.2082, 16.3738],
     "Brussels": [50.8503, 4.3517],
