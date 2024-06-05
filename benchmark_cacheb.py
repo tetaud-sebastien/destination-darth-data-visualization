@@ -20,7 +20,7 @@ if __name__ == "__main__":
     capital_coordinates = dict(sorted(capital_coordinates.items()))
     url_dataset = config["cacheb_url"]
     output_folder = config["output_folder"]
-    request_nb = config["request_nb"]
+    request_nb = config["num_requests"]
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     out_dir = os.path.join(dir_path, output_folder)

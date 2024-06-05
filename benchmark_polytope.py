@@ -154,13 +154,18 @@ if __name__ == "__main__":
             benchmark["request_issues"][r] = request_issues
 
 
-            logger.error(benchmark)
+        logger.error(benchmark)
 
 
-
+        try:
         # Calculate mean times
-        benchmarks[cap] = {key: np.mean(value) for key,
-                           value in benchmark.items()}
+            benchmarks[cap] = {key: np.mean(value) for key,
+                            value in benchmark.items()}
+        except Exception as e:
+            continue
+
+        # benchmarks[cap] = {key: np.mean([item for item in value if item is not None])for key,
+        #                    value in benchmark.items()}
         # Calculate mean and standard deviation of times
         benchmarks[cap]["end_to_end_std"] = np.std(benchmark["end_to_end"])
 
