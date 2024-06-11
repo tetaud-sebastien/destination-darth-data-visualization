@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This module's docstring summary line.
+"""
 This Python utils file contains functions for data loading, preprocessing,
 visualization, modeling, and benchmarking for DestinE climate-dt.
 """
