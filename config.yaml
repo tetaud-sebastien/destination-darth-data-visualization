@@ -1,41 +1,41 @@
 num_requests: 2
 start_date: "20201201"
-end_date: "20220901"
+end_date: "20290901"
 freq: "MS" # pandas attribite
-output_folder: "results/cacheb/"
+output_folder: "results/polytope_year_2/"
 
 # CACHEB cacheb.dcms.destine.eu
-cacheb_url: https://cacheb.dcms.destine.eu/d1-climate-dt/ScenarioMIP-SSP3-7.0-IFS-NEMO-0001-high-sfc-v0.zarr
+cacheb_url: https://cacheb.dcms.destine.eu/d1-climate-dt/ScenarioMIP-SSP3-7.0-IFS-NEMO-0001-standard-sfc-v0.zarr
 
 
 capital_coordinates: {
-    "Vienna": [48.2082, 16.3738],
+    # "Vienna": [48.2082, 16.3738],
     "Brussels": [50.8503, 4.3517],
-    "Sofia": [42.6977, 23.3219],
-    "Zagreb": [45.8150, 15.9819],
-    "Nicosia": [35.1856, 33.3823],
-    "Prague": [50.0755, 14.4378],
-    "Copenhagen": [55.6761, 12.5683],
-    "Tallinn": [59.4370, 24.7535],
-    "Helsinki": [60.1695, 24.9355],
+    # "Sofia": [42.6977, 23.3219],
+    # "Zagreb": [45.8150, 15.9819],
+    # "Nicosia": [35.1856, 33.3823],
+    # "Prague": [50.0755, 14.4378],
+    # "Copenhagen": [55.6761, 12.5683],
+    # "Tallinn": [59.4370, 24.7535],
+    # "Helsinki": [60.1695, 24.9355],
     "Paris": [48.8566, 2.3522],
-    "Berlin": [52.5200, 13.4050],
-    "Athens": [37.9838, 23.7275],
-    "Budapest": [47.4979, 19.0402],
-    "Dublin": [53.3498, -6.2603],
-    "Rome": [41.9028, 12.4964],
-    "Riga": [56.9496, 24.1052],
-    "Vilnius": [54.6872, 25.2797],
-    "Luxembourg": [49.6117, 6.1319],
-    "Valletta": [35.8970, 14.5126],
-    "Amsterdam": [52.3676, 4.9041],
-    "Warsaw": [52.2297, 21.0122],
-    "Lisbon": [38.7223, -9.1393],
-    "Bucharest": [44.4268, 26.1025],
-    "Bratislava": [48.1486, 17.1077],
-    "Ljubljana": [46.0569, 14.5058],
-    "Madrid": [40.4168, -3.7038],
-    "Stockholm": [59.3293, 18.0686]
+    # "Berlin": [52.5200, 13.4050],
+    # "Athens": [37.9838, 23.7275],
+    # "Budapest": [47.4979, 19.0402],
+    # "Dublin": [53.3498, -6.2603],
+    # "Rome": [41.9028, 12.4964],
+    # "Riga": [56.9496, 24.1052],
+    # "Vilnius": [54.6872, 25.2797],
+    # "Luxembourg": [49.6117, 6.1319],
+    # "Valletta": [35.8970, 14.5126],
+    # "Amsterdam": [52.3676, 4.9041],
+    # "Warsaw": [52.2297, 21.0122],
+    # "Lisbon": [38.7223, -9.1393],
+    # "Bucharest": [44.4268, 26.1025],
+    # "Bratislava": [48.1486, 17.1077],
+    # "Ljubljana": [46.0569, 14.5058],
+    # "Madrid": [40.4168, -3.7038],
+    # "Stockholm": [59.3293, 18.0686]
     }
 
 # POLYTOPE
@@ -53,8 +53,6 @@ polytope_request:
   realization: 1
   resolution: standard
   stream: clte
-  # time: '00/01/02'
-
   time: '00/01/02'
   type: fc
 
@@ -63,3 +61,38 @@ grid:
   lat: 0.3
   lon: 0.3
   method: linear
+
+# CDS
+cds_request:
+  name: reanalysis-era5-single-levels
+  request: {
+            "variable": [
+            '10m_u_component_of_wind', '10m_v_component_of_wind'],
+            "product_type": "reanalysis",
+            "year": "2005",
+            "month": "09",
+            "day": [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+            '13', '14', '15',
+            '16', '17', '18',
+            '19', '20', '21',
+            '22', '23', '24',
+            '25', '26', '27',
+            '28', '29', '30',
+            '31',
+        ],
+            'time': [
+            '00:00',
+            # '03:00', '04:00', '05:00',
+            # '06:00', '07:00', '08:00',
+            # '09:00', '10:00', '11:00',
+            # '12:00', '13:00', '14:00',
+            # '15:00', '16:00', '17:00',
+            # '18:00', '19:00', '20:00',
+            # '21:00', '22:00', '23:00',
+        ],
+            "format": "grib"
+            }
