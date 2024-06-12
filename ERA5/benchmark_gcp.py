@@ -1,16 +1,15 @@
-from loguru import logger
-import os, glob
-from tqdm import tqdm
+import glob
+import os
 import time
+
 import pandas as pd
-from utils import (load_config, GcpERA5,
-                   WindSpeedVisualizer, plot_benchmark,
+from loguru import logger
+from tqdm import tqdm
+
+from utils import (GcpERA5, WindSpeedVisualizer, load_config, plot_benchmark,
                    save_results)
 
-
 if __name__ == "__main__":
-
-
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     config = load_config(file_path=os.path.join(dir_path,"config.yaml"))

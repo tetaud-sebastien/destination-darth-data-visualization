@@ -1,11 +1,12 @@
-from loguru import logger
-import os, glob
-from tqdm import tqdm
+import glob
+import os
 import time
-from utils import (load_config, CdsERA5,
-                   WindSpeedVisualizer, plot_benchmark,
-                   save_results)
 
+from loguru import logger
+from tqdm import tqdm
+
+from utils import (CdsERA5, WindSpeedVisualizer, load_config, plot_benchmark,
+                   save_results)
 
 if __name__ == "__main__":
 
