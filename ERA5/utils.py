@@ -126,7 +126,6 @@ class CdsERA5:
         if self.format=="grib":
 
             ds = xr.open_dataset(self.filename, engine="cfgrib")
-            # ds = ds.isel(time=0)
             wind_speed = calculate_wind_speed(ds.u10, ds.v10)
 
         return wind_speed, ds
