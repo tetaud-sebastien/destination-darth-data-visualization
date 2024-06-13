@@ -22,7 +22,7 @@ if __name__ == "__main__":
     logger.info("start benchmark")
     request_issues = 0
     benchmark = {
-            "access_time": [None]* num_requests,
+            "download_time": [None]* num_requests,
             "data_processing": [None]* num_requests,
             "animation": [None]* num_requests,
             "end_to_end": [None]* num_requests,
@@ -41,21 +41,19 @@ if __name__ == "__main__":
         t0 = time.time()
         try:
             gcp = GcpERA5(url_dataset)
+            gcp.get_data(date_range=date_range, variables=variables)
+            gcp.download()
             t1 = time.time()
         except Exception as e:
             logger.error(f"Issue in the data access or download: {e}")
             request_issues += 1
             continue
-        gcp.select_data(date_range=date_range, variables=variables)
-        gcp.to_fieldset()
-        gcp.regrid_to_latlon()
-        gcp.roll_longitude()
-        wind_speed = gcp.calculate_wind_speed()
+        wind_speed, _ = gcp.calculate_wind_speed()
         t2 = time.time()
         wind_anim = WindSpeedVisualizer.generate_animation(wind_speed)
         t3 = time.time()
         # Record benchmarking times
-        benchmark["access_time"][r]=(t1-t0)
+        benchmark["download_time"][r]=(t1-t0)
         benchmark["data_processing"][r]=(t2-t1)
         benchmark["animation"][r]=(t3-t2)
         benchmark["end_to_end"][r]=(t3-t0)

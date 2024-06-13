@@ -143,8 +143,6 @@ class GcpERA5:
         self.zarr_path = zarr_path
         self.dataset = None
         self.selected_data = None
-        self.fieldset = None
-        self.regridded_dataset = None
 
         try:
             self.dataset = xr.open_zarr(
@@ -157,7 +155,9 @@ class GcpERA5:
             logger.error(f"Error loading ERA5 data from Zarr store: {e}")
             raise
 
-    def select_data(self, date_range: pd.DatetimeIndex, variables=["u10","v10"]):
+    def get_data(self, date_range: pd.DatetimeIndex,
+                    variables=["10m_u_component_of_wind",
+                               "10m_v_component_of_wind"]):
         """
         Selects a slice of the dataset based on the provided date range.
 
@@ -169,74 +169,17 @@ class GcpERA5:
         """
         try:
             self.selected_data = self.dataset[variables].sel(time=date_range)
-            logger.info(f"Data slice selected for date range {date_range}")
+            logger.info(f"Data slice selected for date range")
             return self.selected_data
         except Exception as e:
             logger.error(f"Error selecting data slice: {e}")
             raise
 
-    def to_fieldset(self):
+    def download(self):
         """
-        Converts the selected data slice to a Metview fieldset.
-
-        Returns:
-            Metview Fieldset: The converted fieldset.
         """
-        if self.selected_data is None:
-            logger.error("No data selected to convert. Call 'select_data' first.")
-            raise ValueError("No data selected to convert. Call 'select_data' first.")
+        self.selected_data = self.selected_data.load()
 
-        try:
-            self.fieldset = mv.dataset_to_fieldset(self.selected_data.squeeze())
-            logger.info("Selected data slice converted to Metview fieldset successfully")
-            return self.fieldset
-        except Exception as e:
-            logger.error(f"Error converting data slice to fieldset: {e}")
-            raise
-
-    def regrid_to_latlon(self, resolution: tuple = (0.25, 0.25)):
-        """
-        Regrids the fieldset to latitude/longitude coordinates at the specified resolution.
-
-        Args:
-            resolution (tuple): A tuple specifying the grid resolution (default is 0.25° x 0.25°).
-
-        Returns:
-            xarray.Dataset: The regridded dataset.
-        """
-        if self.fieldset is None:
-            logger.error("No fieldset available. Call 'to_fieldset' first.")
-            raise ValueError("No fieldset available. Call 'to_fieldset' first.")
-
-        try:
-            single_ll = mv.read(data=self.fieldset, grid=list(resolution))
-            self.regridded_dataset = single_ll.to_dataset()
-            logger.info(f"Fieldset regridded to latitude/longitude coordinates at resolution {resolution} successfully")
-            return self.regridded_dataset
-        except Exception as e:
-            logger.error(f"Error regridding fieldset: {e}")
-            raise
-
-    def roll_longitude(self):
-        """
-        Adjusts the longitude coordinates of the regridded dataset to the [-180, 180) range and sorts.
-
-        Returns:
-            xarray.Dataset: The dataset with adjusted longitude coordinates.
-        """
-        if self.regridded_dataset is None:
-            logger.error("No regridded dataset available. Call 'regrid_to_latlon' first.")
-            raise ValueError("No regridded dataset available. Call 'regrid_to_latlon' first.")
-
-        try:
-            self.regridded_dataset = self.regridded_dataset.assign_coords(
-                longitude=(((self.regridded_dataset.longitude + 180) % 360) - 180)
-            ).sortby('longitude')
-            logger.info("Longitude coordinates adjusted and sorted successfully")
-            return self.regridded_dataset
-        except Exception as e:
-            logger.error(f"Error adjusting longitude coordinates: {e}")
-            raise
 
     def calculate_wind_speed(self):
         """
@@ -245,16 +188,13 @@ class GcpERA5:
         Returns:
             xarray.DataArray: The computed wind speed.
         """
-        if self.regridded_dataset is None:
-            logger.error("No regridded dataset available. Call 'regrid_to_latlon' and 'roll_longitude' first.")
-            raise ValueError("No regridded dataset available. Call 'regrid_to_latlon' and 'roll_longitude' first.")
 
         try:
-            u10 = self.regridded_dataset.u10
-            v10 = self.regridded_dataset.v10
+            u10 = self.selected_data["10m_u_component_of_wind"]
+            v10 = self.selected_data["10m_v_component_of_wind"]
             wind_speed = np.sqrt(u10**2 + v10**2)
             logger.info("Wind speed calculated successfully from regridded dataset")
-            return wind_speed
+            return wind_speed, self.selected_data
         except Exception as e:
             logger.error(f"Error calculating wind speed: {e}")
             raise
