@@ -17,8 +17,16 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from matplotlib.animation import FuncAnimation
+import pystac_client
+import planetary_computer
 from IPython.display import HTML
-
+import re
+# Function to find coordinate names using regex
+def find_coord_name(coord_names, pattern):
+    for name in coord_names:
+        if pattern.search(name):
+            return name
+    return None
 
 def load_config(file_path: str) -> dict:
     """
@@ -40,16 +48,24 @@ def calculate_wind_speed(u10, v10):
 
 
 class WindSpeedVisualizer:
+
+
     @staticmethod
     def plot_wind_speed(wind_speed):
         """
         Plot wind speed data on a map.
         """
+        lat_pattern = re.compile(r'lat(itude)?', re.IGNORECASE)
+        lon_pattern = re.compile(r'lon(gitude)?', re.IGNORECASE)
+        coord_names = wind_speed.coords.keys()
+        # Detect latitude, longitude, and time coordinates
+        lat_name = find_coord_name(coord_names, lat_pattern)
+        lon_name = find_coord_name(coord_names, lon_pattern)
         fig = plt.figure(figsize=(12, 8))
         ax = plt.axes(projection=ccrs.PlateCarree())
         ax.add_feature(cfeature.LAND)
         ax.add_feature(cfeature.COASTLINE)
-        heatmap = ax.pcolormesh(wind_speed.longitude, wind_speed.latitude, wind_speed,
+        heatmap = ax.pcolormesh(wind_speed[lon_name], wind_speed[lat_name], wind_speed,
                                 cmap='Blues', transform=ccrs.PlateCarree())
         cbar = plt.colorbar(heatmap, ax=ax, orientation='horizontal', pad=0.05)
         cbar.set_label('Wind Speed [m/s]')
@@ -63,18 +79,26 @@ class WindSpeedVisualizer:
         """
         Generate an animation of wind speed data.
         """
+        lat_pattern = re.compile(r'lat(itude)?', re.IGNORECASE)
+        lon_pattern = re.compile(r'lon(gitude)?', re.IGNORECASE)
+        coord_names = wind_speed.coords.keys()
+        lat_name = find_coord_name(coord_names, lat_pattern)
+        lon_name = find_coord_name(coord_names, lon_pattern)
+        # Detect latitude, longitude, and time coordinates
+        lat_name = find_coord_name(coord_names, lat_pattern)
+        lon_name = find_coord_name(coord_names, lon_pattern)
         fig = plt.figure(figsize=(12, 8))
         ax = plt.axes(projection=ccrs.PlateCarree())
         ax.add_feature(cfeature.LAND)
         ax.add_feature(cfeature.COASTLINE)
-        heatmap = ax.pcolormesh(wind_speed.longitude, wind_speed.latitude, wind_speed.isel(time=0),
+        heatmap = ax.pcolormesh(wind_speed[lon_name], wind_speed[lat_name], wind_speed.isel(time=0),
                                 cmap='Blues', transform=ccrs.PlateCarree())
         cbar = plt.colorbar(heatmap, ax=ax, orientation='horizontal', pad=0.05)
         cbar.set_label('Wind Speed [m/s]')
         ax.set_title(f'Wind Speed Animation')
 
         # Initialize the plot elements
-        mesh = ax.pcolormesh(wind_speed.longitude, wind_speed.latitude, wind_speed.isel(time=0),
+        mesh = ax.pcolormesh(wind_speed[lon_name], wind_speed[lat_name], wind_speed.isel(time=0),
                             cmap='Blues', transform=ccrs.PlateCarree())
 
         # Function to update the plot for each frame of the animation
@@ -191,6 +215,68 @@ class GcpERA5:
         try:
             u10 = self.selected_data["10m_u_component_of_wind"]
             v10 = self.selected_data["10m_v_component_of_wind"]
+            wind_speed = np.sqrt(u10**2 + v10**2)
+            logger.info("Wind speed calculated successfully from regridded dataset")
+            return wind_speed, self.selected_data
+        except Exception as e:
+            logger.error(f"Error calculating wind speed: {e}")
+            raise
+
+
+class PlanetaryComputerERA5:
+    def __init__(self, stac_url: str):
+        """
+        Initializes the ERA5Processor class and loads the ERA5 reanalysis data from the specified Zarr path.
+
+        Args:
+            stac_url (str): The path to the Zarr store containing ERA5 reanalysis data.
+        """
+        self.stac_url = stac_url
+        self.catalog = None
+        self.selected_data = None
+
+        try:
+            self.catalog = pystac_client.Client.open(self.stac_url)
+
+            logger.info(f"Access to ERA5 reanalysis successfully from {self.stac_url}")
+        except Exception as e:
+            logger.error(f"Error Access ERA5 data from Url store: {e}")
+            raise
+
+    def get_data(self, date_range: pd.DatetimeIndex,
+                    variables=["northward_wind_at_10_metres",
+                               "eastward_wind_at_10_metres"]):
+
+        try:
+            search = self.catalog.search(collections=["era5-pds"], datetime=date_range[0], query={"era5:kind": {"eq": "an"}})
+            items = search.get_all_items()
+            signed_item = planetary_computer.sign(items[0])
+            datasets = [xr.open_dataset(asset.href, **asset.extra_fields["xarray:open_kwargs"])
+                for asset in signed_item.assets.values()]
+            self.selected_data = xr.combine_by_coords(datasets, join="exact")
+            self.selected_data  = self.selected_data[variables].sel(time=date_range)
+            return
+        except Exception as e:
+            logger.error(f"Error selecting data slice: {e}")
+            raise
+
+    def download(self):
+        """
+        """
+        self.selected_data = self.selected_data.load()
+
+
+    def calculate_wind_speed(self):
+        """
+        Calculates the wind speed from the regridded dataset's u and v wind components.
+
+        Returns:
+            xarray.DataArray: The computed wind speed.
+        """
+
+        try:
+            u10 = self.selected_data["northward_wind_at_10_metres"]
+            v10 = self.selected_data["eastward_wind_at_10_metres"]
             wind_speed = np.sqrt(u10**2 + v10**2)
             logger.info("Wind speed calculated successfully from regridded dataset")
             return wind_speed, self.selected_data
