@@ -251,9 +251,9 @@ class PlanetaryComputerERA5:
             search = self.catalog.search(collections=["era5-pds"], datetime=date_range[0], query={"era5:kind": {"eq": "an"}})
             items = search.get_all_items()
             signed_item = planetary_computer.sign(items[0])
-            datasets = [xr.open_dataset(asset.href, **asset.extra_fields["xarray:open_kwargs"])
+            self.datasets = [xr.open_dataset(asset.href, **asset.extra_fields["xarray:open_kwargs"])
                 for asset in signed_item.assets.values()]
-            self.selected_data = xr.combine_by_coords(datasets, join="exact")
+            self.selected_data = xr.combine_by_coords(self.datasets, join="exact")
             self.selected_data  = self.selected_data[variables].sel(time=date_range)
             return
         except Exception as e:
