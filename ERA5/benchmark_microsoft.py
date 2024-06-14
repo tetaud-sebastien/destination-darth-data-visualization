@@ -48,8 +48,8 @@ if __name__ == "__main__":
             logger.error(f"Issue in the data access or download: {e}")
             request_issues += 1
             continue
-        wind_speed, _ = pc.calculate_wind_speed()
         t2 = time.time()
+        wind_speed, _ = pc.calculate_wind_speed()
         wind_anim = WindSpeedVisualizer.generate_animation(wind_speed)
         t3 = time.time()
         # Record benchmarking times

@@ -21,12 +21,18 @@ import pystac_client
 import planetary_computer
 from IPython.display import HTML
 import re
-# Function to find coordinate names using regex
+
+
 def find_coord_name(coord_names, pattern):
+    """
+    Function to find coordinate names using regex
+
+    """
     for name in coord_names:
         if pattern.search(name):
             return name
     return None
+
 
 def load_config(file_path: str) -> dict:
     """
@@ -143,9 +149,7 @@ class CdsERA5:
         self.filename = f"{filename}.{self.format}"
         self.result.download(self.filename)
 
-    def process(self, lat: float = 48.8566, lon: float = 2.3522,
-               method: str = "nearest",
-               resample_period: str = "D"):
+    def process(self):
 
         if self.format=="grib":
 
