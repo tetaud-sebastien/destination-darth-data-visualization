@@ -21,3 +21,7 @@ loguru==0.7.2
 tqdm==4.66.4
 seaborn==0.13.2
 prophet==1.1.5
+cdsapi==0.7.0
+adlfs==2024.4.1
+ffmpeg==1.4
+gcsfs==2024.6.0
